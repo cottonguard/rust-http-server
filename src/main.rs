@@ -39,7 +39,7 @@ fn main() -> io::Result<()> {
         let mut bw = BufWriter::new(s);
 
         write!(&mut bw, "{} {} {}\r\n", "HTTP/1.1", 200, "OK")?;
-        write!(&mut bw, "{}:{}\r\n", "Content-Type", "text/html;charset=UTF-8")?;
+        write!(&mut bw, "{}: {}\r\n", "Content-Type", "text/html;charset=UTF-8")?;
         write!(&mut bw, "\r\n")?;
 
         write!(&mut bw, "<h1>Hello world, Rust!</h1>")?;

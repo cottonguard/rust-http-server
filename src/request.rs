@@ -23,34 +23,30 @@ impl Request {
             None => return Err(RequestParseError {})
         };
 
-        let tokens: Vec<_> 
-            = request_line.split(' ').collect();
-        if (tokens.len() < 3) { 
+        Self::parse_request_line(&mut req, &request_line)?;
+
+        Self::parse_headers(&mut req, lines.collect())?;
+
+        Ok(req)
+    }
+
+    fn parse_request_line(req: &mut Request, line: &str) -> Result<(), RequestParseError> {
+        let tokens: Vec<_> = line.split(' ').collect();
+        if tokens.len() < 3 { 
             return Err(RequestParseError {});
         }
+
         req.method = tokens[0].to_string();
         req.url = tokens[1].to_string();
         req.http_version = tokens[2].to_string();
+        
+        Ok(())
+    }
 
-        req.raw_headers = lines.collect();
-
-        Ok(req)
-
-        /* 
-        (|| {
-            let mut req = Request::default();
-
-            let request_line = lines.next()?;
-            let mut tokens = request_line.split(' ').map(|s| s.to_string());
-            req.method = tokens.next()?;
-            req.url = tokens.next()?;
-            req.http_version = tokens.next()?;
-
-            req.raw_headers = lines.collect();
-
-            Ok(req)
-        })().or_else(|e| Err(RequestParseError {}))
-        */
+    fn parse_headers(req: &mut Request, lines: Vec<String>/* <-(?_?) */)
+    -> Result<(), RequestParseError> {
+        req.raw_headers = lines;
+        Ok(())
     }
 }
 
