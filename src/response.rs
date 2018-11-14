@@ -4,12 +4,12 @@ use std::net::TcpStream;
 use std::collections::HashMap;
 
 pub struct Response {
-    pub socket: TcpStream,
-    pub http_version: String,
-    pub status_code: i32,
-    pub status_message: String,
-    pub headers: HashMap<String, String>,
-    pub body: Vec<u8>
+    socket: TcpStream,
+    http_version: String,
+    status_code: i32,
+    status_message: String,
+    headers: HashMap<String, String>,
+    body: Vec<u8>
 }
 
 impl Response {
@@ -24,6 +24,18 @@ impl Response {
         }
     }
 
+    pub fn set_status_code(&mut self, code: i32) {
+        self.status_code = code;
+    }
+
+    pub fn set_status_message(&mut self, msg: &str) {
+        self.status_message = String::from(msg);
+    }
+
+    pub fn set_header(&mut self, name: &str, value: &str) {
+        self.headers.insert(String::from(name), String::from(value));
+    }
+
     pub fn write(&mut self, chunk: &[u8]) {
         self.body.extend(chunk);
     }
@@ -33,7 +45,10 @@ impl Response {
 
         write!(&mut bw, "{} {} {}\r\n", 
                self.http_version, self.status_code, self.status_message)?;
-        write!(&mut bw, "{}: {}\r\n", "Content-Type", "text/html;charset=UTF-8")?;
+        // write!(&mut bw, "{}: {}\r\n", "Content-Type", "text/html;charset=UTF-8")?;
+        for (name, value) in self.headers {
+            write!(&mut bw, "{}: {}\r\n", name, value);
+        }
         write!(&mut bw, "\r\n")?;
         bw.write(&self.body)?;
 

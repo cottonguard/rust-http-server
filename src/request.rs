@@ -3,14 +3,30 @@ use std::{error, fmt};
 
 #[derive(Default)]
 pub struct Request {
-    pub method: Method,
-    pub url: String,
-    pub http_version: String,
-    pub raw_headers: Vec<String>,
-    pub headers: HashMap<String, String>,
+    method: Method,
+    url: String,
+    http_version: String,
+    raw_headers: Vec<String>,
+    headers: HashMap<String, String>,
 }
 
 impl Request {
+    pub fn method(&self) -> &Method {
+        &self.method
+    }
+
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+
+    pub fn http_version(&self) -> &str {
+        &self.http_version
+    }
+
+    pub fn raw_headers(&self) -> &[String] {
+        &self.raw_headers
+    } 
+
     pub fn parse<T: Iterator<Item = String>>(mut lines: T)
         -> Result<Request, RequestParseError> {
         // jissou ga bimyou

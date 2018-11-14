@@ -1,9 +1,11 @@
 extern crate log;
+
 use log::*;
 
 mod request;
 mod response;
 mod static_router;
+mod mime;
 
 use request::*;
 use response::*;
@@ -34,11 +36,11 @@ fn main() -> io::Result<()> {
             .take_while(|l| !l.is_empty())
         ).unwrap();
 
-        println!("method: {}", req.method);
-        println!("url   : {}", req.url);
-        println!("http_version: {}", req.http_version);
+        println!("method: {}", req.method());
+        println!("url   : {}", req.url());
+        println!("http_version: {}", req.http_version());
         println!("raw_headers: ");
-        for line in &req.raw_headers {
+        for line in req.raw_headers() {
             println!("    {}", line);
         }
 
