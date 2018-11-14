@@ -1,9 +1,13 @@
 extern crate log;
 use log::*;
-extern crate env_logger;
 
 mod request;
+mod response;
+mod static_router;
+
 use request::*;
+use response::*;
+use static_router::*;
 
 use std::net::{TcpListener, TcpStream};
 use std::io;
@@ -17,12 +21,14 @@ fn main() -> io::Result<()> {
 
     let listener = TcpListener::bind((host, port))?;
 
+    println!("listening on {}:{}", host, port);
+
     for stream in listener.incoming() {
         let mut s = stream?;
 
         let mut lines = BufReader::new(s.try_clone()?).lines();
 
-        let req = Request::parse(
+        let mut req = Request::parse(
             lines
             .map(|rl| rl.unwrap()) // 
             .take_while(|l| !l.is_empty())
@@ -32,19 +38,15 @@ fn main() -> io::Result<()> {
         println!("url   : {}", req.url);
         println!("http_version: {}", req.http_version);
         println!("raw_headers: ");
-        for line in req.raw_headers {
+        for line in &req.raw_headers {
             println!("    {}", line);
         }
 
-        let mut bw = BufWriter::new(s);
+        let mut res = Response::ok(s);
+        // res.write(b"<h1>Hello world, Rust!</h1>");
+        static_router::serve(req, res);
 
-        write!(&mut bw, "{} {} {}\r\n", "HTTP/1.1", 200, "OK")?;
-        write!(&mut bw, "{}: {}\r\n", "Content-Type", "text/html;charset=UTF-8")?;
-        write!(&mut bw, "\r\n")?;
-
-        write!(&mut bw, "<h1>Hello world, Rust!</h1>")?;
         
-        bw.flush()?;
     }
 
     Ok(())
