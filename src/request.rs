@@ -27,7 +27,7 @@ impl Request {
         &self.raw_headers
     } 
 
-    pub fn parse<T: Iterator<Item = String>>(mut lines: T)
+    pub fn parse(mut lines: impl Iterator<Item = String>)
         -> Result<Request, RequestParseError> {
         // jissou ga bimyou
 
@@ -60,6 +60,16 @@ impl Request {
 
     fn parse_headers(req: &mut Request, lines: Vec<String>/* <-(?_?) */)
     -> Result<(), RequestParseError> {
+        for line in &lines {
+            let mut tokens = line.split(":");
+            let name = tokens.next().map(|s| s.trim().to_string());
+            let value = tokens.next().map(|s| s.trim().to_string());
+            
+            match (name, value) { 
+                (Some(n), Some(v)) => req.headers.insert(n, v),
+                _ => return Err(RequestParseError {})
+            };
+        }
         req.raw_headers = lines;
         Ok(())
     }
@@ -90,3 +100,24 @@ impl Default for Method {
     }
 }
 */
+
+#[cfg(test)]
+mod tests {
+    use std::iter;
+
+    use super::*;
+
+    #[test]
+    fn parse() {
+        let msg = [
+            "GET /dir/file.html HTTP/1.1",
+            "Host: example.com:7777",
+        ].iter().map(|s| s.to_string());
+
+        let req = Request::parse(msg).unwrap();
+
+        assert_eq!(req.method(), "GET");
+        assert_eq!(req.url(), "/dir/file.html");
+        assert_eq!(req.http_version(), "HTTP/1.1");
+    }
+}

@@ -13,6 +13,6 @@ pub fn extension_to_mime(ext: &str) -> &str {
         "jpeg" => "image/jpeg",
         "svg"  => "image/svg+xml",
         "ico"  => "image/x-icon",
-        _ => "application/octet-stream"
+        _      => "application/octet-stream"
     }
 }

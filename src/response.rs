@@ -45,7 +45,6 @@ impl Response {
 
         write!(&mut bw, "{} {} {}\r\n", 
                self.http_version, self.status_code, self.status_message)?;
-        // write!(&mut bw, "{}: {}\r\n", "Content-Type", "text/html;charset=UTF-8")?;
         for (name, value) in self.headers {
             write!(&mut bw, "{}: {}\r\n", name, value);
         }
