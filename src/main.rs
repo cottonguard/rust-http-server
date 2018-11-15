@@ -1,7 +1,3 @@
-extern crate log;
-
-use log::*;
-
 mod request;
 mod response;
 mod static_router;
@@ -9,11 +5,10 @@ mod mime;
 
 use request::*;
 use response::*;
-use static_router::*;
 
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::io;
-use std::io::{Read, Write, BufReader, BufWriter, BufRead};
+use std::io::{BufReader, BufRead};
 
 fn main() -> io::Result<()> {
     env_logger::init();
@@ -47,8 +42,6 @@ fn main() -> io::Result<()> {
         let mut res = Response::ok(s);
         // res.write(b"<h1>Hello world, Rust!</h1>");
         static_router::serve(req, res);
-
-        
     }
 
     Ok(())
