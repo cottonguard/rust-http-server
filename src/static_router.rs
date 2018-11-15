@@ -49,3 +49,15 @@ fn read_file(path: impl AsRef<Path>, f: impl FnOnce(io::Result<&[u8]>)) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn not_found() {
+        read_file("n/o/t/f/o/u/n/d", |result| {
+            assert!(result.is_err());
+        });
+    }
+}
