@@ -1,10 +1,9 @@
 use std::io;
 use std::io::{Write, BufWriter};
-use std::net::TcpStream;
+use mio::net::TcpStream;
 use std::collections::HashMap;
 
 pub struct Response {
-    socket: TcpStream,
     http_version: String,
     status_code: i32,
     status_message: String,
@@ -13,9 +12,8 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn ok(socket: TcpStream) -> Response {
+    pub fn ok() -> Response {
         Response {
-            socket,
             http_version: String::from("HTTP/1.1"),
             status_code: 200,
             status_message: String::from("OK"),
@@ -40,8 +38,8 @@ impl Response {
         self.body.extend(chunk);
     }
 
-    pub fn end(self) -> io::Result<()> {
-        let mut bw = BufWriter::new(self.socket);
+    pub fn end(self, socket: &TcpStream) -> io::Result<()> {
+        let mut bw = BufWriter::new(socket);
 
         write!(&mut bw, "{} {} {}\r\n", 
                self.http_version, self.status_code, self.status_message)?;

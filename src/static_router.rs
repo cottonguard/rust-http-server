@@ -6,7 +6,7 @@ use std::path::Path;
 use response::*;
 use request::*;
 use mime::{extension_to_mime};
-
+/*
 pub fn serve(mut req: Request, mut res: Response) {
     let local_path = Path::new("public")
         .join(Path::new(req.url()).strip_prefix("/").unwrap());
@@ -60,4 +60,4 @@ mod tests {
             assert!(result.is_err());
         });
     }
-}
+}*/

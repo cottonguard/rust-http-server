@@ -1,3 +1,5 @@
+extern crate mio;
+
 mod server;
 mod request;
 mod response;
@@ -9,12 +11,12 @@ use server::*;
 use std::io;
 
 fn main() -> io::Result<()> {
-    let host = "127.0.0.1";
+    let host = [127, 0, 0, 1];
     let port = 7777;
 
-    println!("start to listen on {}:{}", host, port);
+    // println!("start to listen on {}:{}", host, port);
 
-    Server::new().listen((host, port))?;
+    Server::new().listen(&(host, port).into())?;
 
     Ok(())
 }
