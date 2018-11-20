@@ -6,26 +6,40 @@ use std::path::Path;
 use response::*;
 use request::*;
 use mime::{extension_to_mime};
-/*
-pub fn serve(mut req: Request, mut res: Response) {
-    let local_path = Path::new("public")
+
+const USE_INDEX_HTML: bool = true;
+
+pub fn serve(req: &Request, res: &mut Response) {
+
+    let mut local_path = Path::new("public")
         .join(Path::new(req.url()).strip_prefix("/").unwrap());
 
     println!("local_path: {:?}", local_path);
+    println!("{:?}", local_path.metadata());
+
+    if USE_INDEX_HTML && local_path.is_dir() {
+        local_path = local_path.join(Path::new("index.html"));
+        println!("local_path: {:?}", local_path);
+        println!("{:?}", local_path.metadata());
+    }
 
     if !local_path.is_file() {
         res.set_status_code(404);
         res.set_status_message("Not Found");
-        let _ = res.end();
+        let body = b"<h1>Not Found</h1>";
+        res.write(body);
+        res.set_header("content-length", &body.len().to_string());
+        // let _ = res.end();
         return;
     }
 
-    read_file(local_path, move |d| {
+    read_file(&local_path, |d| {
         match d {
             Ok(data) => {
                 res.write(data);
                 res.set_header("content-type",
-                    extension_to_mime(req.url().rsplit(".").next().unwrap_or("")));
+                    extension_to_mime(local_path.extension()
+                                      .map_or("", |oss| oss.to_str().unwrap_or(""))));
                 res.set_header("content-length", &data.len().to_string());
             }
             _ => {
@@ -33,7 +47,7 @@ pub fn serve(mut req: Request, mut res: Response) {
                 res.set_status_message("Not Found");
             }
         }
-        let _ = res.end();
+        // let _ = res.end();
     });
 }
 
@@ -60,4 +74,4 @@ mod tests {
             assert!(result.is_err());
         });
     }
-}*/
+}
