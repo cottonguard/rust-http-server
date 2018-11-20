@@ -8,6 +8,7 @@ pub fn extension_to_mime(ext: &str) -> &str {
         "css"  => "text/css",
         "json" => "application/json",
         "xml"  => "application/xml",
+        "gif"  => "image/gif",
         "png"  => "image/png",
         "jpg"  => "image/jpeg",
         "jpeg" => "image/jpeg",

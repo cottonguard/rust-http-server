@@ -1,8 +1,5 @@
-use std::io;
-use std::io::{BufReader, BufRead};
-use std::net::TcpStream;
+use std::io::{BufRead};
 use std::collections::HashMap;
-use std::{fmt};
 
 #[derive(Default, Debug)]
 pub struct Request {

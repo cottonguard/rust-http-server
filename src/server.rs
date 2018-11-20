@@ -59,7 +59,7 @@ impl Connection {
                     println!("==== chunk: {}", self.token.0);
                     let prev_pos = self.pos;
                     self.pos += n;
-                    io::stdout().write(&self.buf[prev_pos .. self.pos]);
+                    io::stdout().write(&self.buf[prev_pos .. self.pos])?;
 
                     if self.buf[.. self.pos].ends_with(b"\r\n\r\n") { //ends_with?
                         println!("==== end header");
@@ -92,7 +92,7 @@ impl Connection {
         // let body = b"<h1>Hello world!</h1>";
         // res.write(body);
         // res.set_header("content-length", &body.len().to_string());
-        res.end(&self.socket);
+        res.end(&self.socket)?;
 
         // clear buffer
         self.pos = 0;
