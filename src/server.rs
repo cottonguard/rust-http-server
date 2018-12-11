@@ -11,8 +11,8 @@ use static_router;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ConnectionState {
-    Loading,
-    Sending,
+    WillReceive,
+    WillSend,
     Closed,
 }
 
@@ -32,7 +32,7 @@ const INITIAL_BUF_SIZE: usize = 256;
 impl Connection {
     fn new(token: Token, socket: TcpStream, addr: SocketAddr) -> Connection {
         let mut conn = Connection {
-            state: ConnectionState::Loading,
+            state: ConnectionState::WillReceive,
             token,
             socket,
             addr,
@@ -44,7 +44,7 @@ impl Connection {
         conn
     }
     
-    fn load(&mut self, poll: &Poll) -> io::Result<()> {
+    fn receive(&mut self, poll: &Poll) -> io::Result<()> {
         loop {
             if self.buf.len() == self.pos {
                 let new_len = 2 * self.buf.len();
@@ -61,12 +61,12 @@ impl Connection {
                     self.pos += n;
                     io::stdout().write(&self.buf[prev_pos .. self.pos])?;
 
-                    if self.buf[.. self.pos].ends_with(b"\r\n\r\n") { //ends_with?
+                    if self.buf[..self.pos].ends_with(b"\r\n\r\n") { //ends_with?
                         println!("==== end header");
                         let req_result = Request::parse(&self.buf[.. self.pos]);
                         match req_result {
                             Ok(req) => {
-                                self.state = ConnectionState::Sending;
+                                self.state = ConnectionState::WillSend;
                                 poll.reregister(
                                     &self.socket, self.token, Ready::writable(), PollOpt::edge())?;
                                 self.request = Some(req);
@@ -78,7 +78,8 @@ impl Connection {
                     println!();
                     println!("==== end of chunk");
                 }
-                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock
+                           || e.kind() == io::ErrorKind::Interrupted => {
                     return Ok(());
                 }
                 Err(e) => { return Err(e); }
@@ -88,16 +89,13 @@ impl Connection {
 
     fn send(&mut self, poll: &Poll) -> io::Result<()> {
         let mut res = Response::ok();
-        static_router::serve(self.request.as_ref().unwrap(), &mut res);
-        // let body = b"<h1>Hello world!</h1>";
-        // res.write(body);
-        // res.set_header("content-length", &body.len().to_string());
+        static_router::serve(self.request.as_ref().unwrap(), &mut res)?;
         res.end(&self.socket)?;
 
         // clear buffer
         self.pos = 0;
 
-        self.state = ConnectionState::Loading;
+        self.state = ConnectionState::WillReceive;
         poll.reregister(&self.socket, self.token, Ready::readable(), PollOpt::edge())?;
 
         println!("==== sent: {}", self.token.0);
@@ -139,8 +137,8 @@ impl Server {
                         let state = {
                             let conn = self.connections.get_mut(&token).unwrap();
                             match conn.state {
-                                ConnectionState::Loading => conn.load(&poll)?,
-                                ConnectionState::Sending => conn.send(&poll)?,
+                                ConnectionState::WillReceive => conn.receive(&poll)?,
+                                ConnectionState::WillSend => conn.send(&poll)?,
                                 _ => {}
                             }
                             conn.state
@@ -169,7 +167,8 @@ impl Server {
                     
                     self.connections.insert(token, Connection::new(token, socket, addr));
                 }
-                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock
+                           || e.kind() == io::ErrorKind::Interrupted => {
                     return Ok(());
                 }
                 Err(e) => {

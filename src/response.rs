@@ -44,10 +44,10 @@ impl Response {
         write!(&mut bw, "{} {} {}\r\n", 
                self.http_version, self.status_code, self.status_message)?;
         for (name, value) in self.headers {
-            write!(&mut bw, "{}: {}\r\n", name, value);
+            write!(&mut bw, "{}: {}\r\n", name, value)?;
         }
         write!(&mut bw, "\r\n")?;
-        bw.write(&self.body)?;
+        bw.write_all(&self.body)?;
 
         bw.flush()?;
 
